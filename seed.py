@@ -1,5 +1,5 @@
 import pandas as pd
-from database import SessionLocal, engine
+from database import SessionLocal, SessionLocal, engine
 import models
 import os
 
