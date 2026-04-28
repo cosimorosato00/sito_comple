@@ -7,6 +7,9 @@ from sqlalchemy.exc import SQLAlchemyError
 import secrets
 import models, schemas
 from database import engine, get_db, SessionLocal
+from pydantic import BaseModel
+class PhotoUpdate(BaseModel):
+    photo_url: str
 
 # Crea le tabelle automaticamente
 models.Base.metadata.create_all(bind=engine)
@@ -146,6 +149,15 @@ def get_bookings(db: Session = Depends(get_db), username: str = Depends(get_curr
                  .filter(models.Variant.is_available == False)\
                  .all()
     return variants
+
+@app.post("/api/variants/{variant_id}/update-photo")
+def update_variant_photo(variant_id: int, request: PhotoUpdate, db: Session = Depends(get_db)):
+    variant = db.query(models.Variant).filter(models.Variant.id == variant_id).first()
+    if not variant:
+        raise HTTPException(status_code=404, detail="Variante non trovata")
+    variant.photo_url = request.photo_url
+    db.commit()
+    return {"status": "success", "message": "Foto aggiornata"}
 
 @app.post("/api/admin/variants/{variant_id}/cancel")
 def cancel_booking(variant_id: int, db: Session = Depends(get_db), username: str = Depends(get_current_username)):
