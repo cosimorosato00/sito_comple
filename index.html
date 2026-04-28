@@ -134,7 +134,7 @@ body {
 
     <script>
         const API_BASE = '/api';
-        const supabase = window.supabase || supabase.createClient('https://iyhsivbihzxkprlmtnkt.supabase.co', 'sb_publishable_n6pTi2kGWQXAaa2yJnKIrA_hfRGkVST');
+        const sb = supabase.createClient('https://iyhsivbihzxkprlmtnkt.supabase.co', 'sb_publishable_n6pTi2kGWQXAaa2yJnKIrA_hfRGkVST');
         let searchTimeout;
         let currentBookingData = null; // Dati della prenotazione corrente
     
@@ -179,42 +179,29 @@ body {
     
             canvas.toBlob(async (blob) => {
                 if (!blob) return;
-    
-                // Nome file unico
                 const fileName = `selfie_${currentBookingData.variantId}_${Date.now()}.webp`;
     
-                // 1. Caricamento su Supabase Storage (bucket "fotine")
-                const { data, error } = await supabase.storage
+                // Usa 'sb' qui
+                const { data, error } = await sb.storage
                     .from('fotine') 
-                    .upload(fileName, blob, {
-                        contentType: 'image/webp'
-                    });
+                    .upload(fileName, blob, { contentType: 'image/webp' });
     
                 if (error) {
-                    console.error("Errore upload su Supabase:", error);
-                    alert("Errore nel caricamento della foto: " + error.message);
+                    console.error("Errore upload:", error);
+                    alert("Errore caricamento: " + error.message);
                     return;
                 }
     
-                // 2. Ottenimento URL pubblico
-                const { data: urlData } = supabase.storage
+                // Usa 'sb' anche qui
+                const { data: urlData } = sb.storage
                     .from('fotine')
                     .getPublicUrl(fileName);
     
-                // 3. Invio URL al tuo backend FastAPI su Railway
-                try {
-                    const response = await fetch(`${API_BASE}/variants/${currentBookingData.variantId}/update-photo`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ photo_url: urlData.publicUrl })
-                    });
-    
-                    if (!response.ok) throw new Error("Errore nel salvataggio su DB");
-                } catch (err) {
-                    console.error(err);
-                    alert("Foto caricata, ma errore nel salvataggio sul database.");
-                    return;
-                }
+                await fetch(`${API_BASE}/variants/${currentBookingData.variantId}/update-photo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ photo_url: urlData.publicUrl })
+                });
     
                 stopCamera();
                 showModal(currentBookingData.variantName);
