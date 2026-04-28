@@ -6,9 +6,60 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 import secrets
 import models, schemas
-from database import engine, get_db
+from database import engine, get_db, SessionLocal
 
+# Crea le tabelle automaticamente
 models.Base.metadata.create_all(bind=engine)
+
+# Seed automatico al primo avvio (solo se il DB è vuoto)
+def auto_seed():
+    db = SessionLocal()
+    try:
+        if db.query(models.Category).count() > 0:
+            return  # Già popolato
+        print("Esecuzione seed automatico...")
+        import pandas as pd
+        import os
+        excel_path = "scraping/ricette_con_c.xlsx"
+        if not os.path.exists(excel_path):
+            print(f"Excel non trovato: {excel_path}")
+            return
+        df = pd.read_excel(excel_path)
+        cols = df.columns.str.lower()
+        df.columns = cols
+        if "categoria" not in cols:
+            return
+        unique_categories = df['categoria'].dropna().unique()
+        cat_map = {}
+        for cat_name in unique_categories:
+            cat_name_str = str(cat_name).strip()
+            normalized = " ".join(cat_name_str.lower().split())
+            db_cat = models.Category(name=cat_name_str, normalized_name=normalized)
+            db.add(db_cat)
+            db.flush()
+            cat_map[normalized] = db_cat.id
+        added = 0
+        for index, row in df.iterrows():
+            cat_name = str(row['categoria']).strip() if pd.notna(row['categoria']) else ""
+            var_name = str(row['variante']).strip() if pd.notna(row['variante']) else ""
+            if not cat_name or not var_name:
+                continue
+            normalized_cat = " ".join(cat_name.lower().split())
+            cat_id = cat_map.get(normalized_cat)
+            if cat_id:
+                db_var = models.Variant(category_id=cat_id, name=var_name, is_available=True)
+                db.add(db_var)
+                added += 1
+        db.commit()
+        print(f"Seed completato: {len(cat_map)} categorie, {added} varianti")
+    except Exception as e:
+        print(f"Errore seed: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+# Esegui seed in background
+auto_seed()
 
 app = FastAPI(title="Sistema Prenotazione Piatti API")
 security = HTTPBasic()
@@ -127,3 +178,62 @@ def serve_drinks():
 @app.get("/admin")
 def serve_admin(username: str = Depends(get_current_username)):
     return FileResponse("admin.html")
+
+@app.post("/api/admin/seed")
+def run_seed(db: Session = Depends(get_db)):
+    """Endpoint per eseguire il seed manualmente (solo per setup iniziale)"""
+    import pandas as pd
+    import os
+    
+    # Verifica se il DB è già popolato
+    existing = db.query(models.Category).count()
+    if existing > 0:
+        return {"status": "already_seeded", "categories": existing}
+    
+    excel_path = "scraping/ricette_con_c.xlsx"
+    if not os.path.exists(excel_path):
+        return {"status": "error", "detail": "File Excel non trovato"}
+    
+    try:
+        df = pd.read_excel(excel_path)
+        cols = df.columns.str.lower()
+        df.columns = cols
+        
+        if "categoria" not in cols or "variante" not in cols:
+            return {"status": "error", "detail": "Colonne mancanti nel file Excel"}
+        
+        # Crea categorie
+        unique_categories = df['categoria'].dropna().unique()
+        cat_map = {}
+        
+        for cat_name in unique_categories:
+            cat_name_str = str(cat_name).strip()
+            normalized = " ".join(cat_name_str.lower().split())
+            db_cat = models.Category(name=cat_name_str, normalized_name=normalized)
+            db.add(db_cat)
+            db.flush()
+            cat_map[normalized] = db_cat.id
+        
+        # Crea varianti
+        added = 0
+        for index, row in df.iterrows():
+            cat_name = str(row['categoria']).strip() if pd.notna(row['categoria']) else ""
+            var_name = str(row['variante']).strip() if pd.notna(row['variante']) else ""
+            
+            if not cat_name or not var_name:
+                continue
+            
+            normalized_cat = " ".join(cat_name.lower().split())
+            cat_id = cat_map.get(normalized_cat)
+            
+            if cat_id:
+                db_var = models.Variant(category_id=cat_id, name=var_name, is_available=True)
+                db.add(db_var)
+                added += 1
+        
+        db.commit()
+        return {"status": "success", "categories": len(cat_map), "variants": added}
+        
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "detail": str(e)}
