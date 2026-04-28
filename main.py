@@ -161,7 +161,13 @@ def update_variant_photo(variant_id: int, request: PhotoUpdate, db: Session = De
 
 @app.post("/api/admin/variants/{variant_id}/cancel")
 def cancel_booking(variant_id: int, db: Session = Depends(get_db), username: str = Depends(get_current_username)):
-    db.query(models.Variant).filter(models.Variant.id == variant_id).update({"is_available": True, "booked_by": None}, synchronize_session=False)
+    # Aggiorniamo anche photo_url a None
+    db.query(models.Variant).filter(models.Variant.id == variant_id).update({
+        "is_available": True, 
+        "booked_by": None,
+        "photo_url": None  # <--- AGGIUNTA LOGICA
+    }, synchronize_session=False)
+    
     db.commit()
     return {"status": "success"}
 
