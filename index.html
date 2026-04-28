@@ -118,37 +118,76 @@ body {
         </div>
     </div>
 
-    <script>
-        // Quando eseguirai il tunnel dovremmo cambiare questo API base. Oppure possiamo usare percorsi relativi se servita da fastapi.
-        const API_BASE = '/api'; // Useremo file statici serviti da FastAPI per bypassare il problema CORS/URL
-        let searchTimeout;
+    <div id="selfieModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 12px; text-align: center; width: 90%; max-width: 400px;">
+            <h2 style="color: white; margin-top: 0;">Fatti un selfie!</h2>
+            <video id="video" autoplay playsinline style="width: 100%; border-radius: 8px; background: black; margin-bottom: 1rem;"></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="stopCamera()" style="background: #475569; color: white; border: none; padding: 12px; border-radius: 8px; flex: 1;">Annulla</button>
+                <button id="snapBtn" style="background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; flex: 1; font-weight: bold;">Scatta</button>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        const API_BASE = '/api';
+        let searchTimeout;
+        let currentBookingData = null; // Dati della prenotazione corrente
+    
         const searchInput = document.getElementById('searchInput');
         const dropdown = document.getElementById('autocompleteDropdown');
         const variantsContainer = document.getElementById('variantsContainer');
         const variantsList = document.getElementById('variantsList');
         const selectedCategoryTitle = document.getElementById('selectedCategoryTitle');
-
+    
+        // Funzioni esistenti di gestione UI
         function showModal(variantName) {
             document.getElementById('modalVariantName').textContent = `Hai prenotato: ${variantName}`;
             document.getElementById('successModal').style.display = 'flex';
         }
-
-        function showMessage(msg) {
-            alert(msg);
+    
+        function showMessage(msg) { alert(msg); }
+    
+        // --- LOGICA SELFIE ---
+        const video = document.getElementById('video');
+        const selfieModal = document.getElementById('selfieModal');
+    
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+                video.srcObject = stream;
+                selfieModal.style.display = 'flex';
+            } catch (err) { alert("Fotocamera non disponibile: " + err); }
         }
-
+    
+        function stopCamera() {
+            const stream = video.srcObject;
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            selfieModal.style.display = 'none';
+        }
+    
+        document.getElementById('snapBtn').addEventListener('click', () => {
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            // Qui in futuro gestirai il salvataggio: const imgData = canvas.toDataURL('image/webp');
+            
+            stopCamera();
+            // Mostriamo il successo finale dopo lo scatto
+            showModal(currentBookingData.variantName);
+        });
+    
+        // --- LOGICA RICERCA E PRENOTAZIONE ---
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value;
             variantsContainer.style.display = 'none';
-            
             clearTimeout(searchTimeout);
+            if (query.length < 3) { dropdown.style.display = 'none'; return; }
             
-            if (query.length < 3) {
-                dropdown.style.display = 'none';
-                return;
-            }
-
             searchTimeout = setTimeout(() => {
                 fetch(`${API_BASE}/categories?q=${encodeURIComponent(query)}`)
                     .then(res => res.json())
@@ -163,20 +202,11 @@ body {
                                 dropdown.appendChild(div);
                             });
                             dropdown.style.display = 'block';
-                        } else {
-                            dropdown.style.display = 'none';
-                        }
-                    })
-                    .catch(e => console.error(e));
+                        } else { dropdown.style.display = 'none'; }
+                    });
             }, 300);
         });
-
-        document.addEventListener('click', (e) => {
-            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-
+    
         function selectCategory(category) {
             searchInput.value = category.name;
             dropdown.style.display = 'none';
@@ -186,62 +216,42 @@ body {
                 .then(res => res.json())
                 .then(variants => {
                     variantsList.innerHTML = '';
-                    if (variants.length === 0) {
-                        variantsList.innerHTML = '<p style="color:#94a3b8; text-align:center;">Nessuna variante per questa categoria.</p>';
-                    } else {
-                        variants.forEach(variant => {
-                            const div = document.createElement('div');
-                            div.className = 'variant-card';
-                            
-                            if(variant.is_available) {
-                                div.innerHTML = `
-                                    <span class="variant-name">${variant.name}</span>
-                                    <button class="book-btn" onclick="bookVariant(${variant.id}, '${variant.name.replace(/'/g, "\\'")}', this, ${category.id})">Prenota</button>
-                                `;
-                            } else {
-                                div.style.opacity = '0.6';
-                                div.innerHTML = `
-                                    <span class="variant-name" style="text-decoration: line-through; color: #94a3b8;">${variant.name}</span>
-                                    <span style="color: #ef4444; font-size: 0.85rem; font-weight: bold; flex-shrink: 0;">❌ Occupata</span>
-                                `;
-                            }
-                            
-                            variantsList.appendChild(div);
-                        });
-                    }
+                    variants.forEach(variant => {
+                        const div = document.createElement('div');
+                        div.className = 'variant-card';
+                        if(variant.is_available) {
+                            div.innerHTML = `
+                                <span class="variant-name">${variant.name}</span>
+                                <button class="book-btn" onclick="bookVariant(${variant.id}, '${variant.name.replace(/'/g, "\\'")}', this, ${category.id})">Prenota</button>
+                            `;
+                        } else {
+                            div.style.opacity = '0.6';
+                            div.innerHTML = `<span class="variant-name" style="text-decoration: line-through; color: #94a3b8;">${variant.name}</span><span style="color: #ef4444; font-size: 0.85rem; font-weight: bold; flex-shrink: 0;">❌ Occupata</span>`;
+                        }
+                        variantsList.appendChild(div);
+                    });
                     variantsContainer.style.display = 'block';
                 });
         }
-
-        let currentBookingData = null;
-
+    
         function bookVariant(variantId, variantName, button, categoryId) {
             currentBookingData = { variantId, variantName, button, categoryId };
             document.getElementById('targetVariantName').textContent = variantName;
             document.getElementById('nameInputModal').style.display = 'flex';
-            document.getElementById('bookingNameInput').value = '';
-            document.getElementById('bookingNameInput').focus();
         }
-
-        function closeNameModal() {
-            document.getElementById('nameInputModal').style.display = 'none';
-            currentBookingData = null;
-        }
-
+    
+        function closeNameModal() { document.getElementById('nameInputModal').style.display = 'none'; }
+    
         document.getElementById('confirmBookingBtn').onclick = () => {
             const nameInput = document.getElementById('bookingNameInput').value.trim();
-            if (nameInput.length < 2) {
-                alert("Per favore, inserisci un nome valido.");
-                return;
-            }
+            if (nameInput.length < 2) { alert("Inserisci un nome valido."); return; }
             
-            const { variantId, variantName, button, categoryId } = currentBookingData;
+            const { variantId, button, categoryId } = currentBookingData;
             closeNameModal();
-
+    
             button.disabled = true;
             button.innerText = "Attendere...";
-            button.style.background = "#475569";
-
+    
             fetch(`${API_BASE}/variants/${variantId}/book`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -250,23 +260,14 @@ body {
             .then(res => res.json().then(data => ({status: res.status, body: data})))
             .then(({status, body}) => {
                 if (status === 200) {
-                    showModal(variantName);
-                    selectCategory({ id: categoryId, name: searchInput.value });
-                } else if (status === 409) {
-                    showMessage(body.detail || "Ci dispiace, qualcun altro ha testé prenotato questa variante.");
+                    // FLUSSO CONCATENATO: Successo -> Avvia fotocamera
+                    startCamera(); 
                     selectCategory({ id: categoryId, name: searchInput.value });
                 } else {
-                    showMessage("Errore del server. Riprova più tardi.");
+                    alert(body.detail || "Errore.");
                     button.disabled = false;
                     button.innerText = "Prenota";
-                    button.style.background = "";
                 }
-            })
-            .catch(error => {
-                showMessage("Errore di rete. Controlla la connessione.");
-                button.disabled = false;
-                button.innerText = "Prenota";
-                button.style.background = "";
             });
         };
     </script>
