@@ -28,15 +28,13 @@ class VariantAdmin(Variant):
 class BookVariantRequest(BaseModel):
     booked_by: str
 
-class BeverageBooking(BaseModel):
-    id: int
+# 1. Definisci prima la classe di creazione (quella base)
+class BeverageBookingCreate(BaseModel):
     booked_by: str
     beverage_name: str
-    photo_url: str | None = None  # <--- Il "| None = None" permette valori nulli
+    photo_url: str | None = None
 
-    class Config:
-        from_attributes = True
-
+# 2. Poi definisci la classe che la estende (quella di risposta)
 class BeverageBooking(BeverageBookingCreate):
     id: int
 
