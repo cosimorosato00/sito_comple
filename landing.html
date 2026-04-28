@@ -35,6 +35,18 @@
             color: var(--text);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        .stats-box { 
+            /* Rimuoviamo il colore di sfondo piatto e mettiamo la foto con un overlay scuro per leggibilità */
+            background: linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.85)), 
+                        url('https://raw.githubusercontent.com/cosimorosato00/sito_comple/refs/heads/main/imgs/uecco3.webp');
+            background-size: cover;
+            background-position: center;
+            padding: 1.5rem; 
+            border-radius: 8px; 
+            margin-bottom: 2rem; 
+            border: 1px solid #334155; 
+            position: relative; /* Utile per gestire il layer */
+        }
         h1 { margin-top: 0; font-size: 2rem; margin-bottom: 0.5rem; }
         .disclaimer { color: #94a3b8; margin-bottom: 2.5rem; font-size: 1.1rem;}
         
@@ -92,7 +104,7 @@
             </a>
             <a href="/drinks" class="choice-btn btn-drinks">
                 <img src="https://raw.githubusercontent.com/cosimorosato00/sito_comple/refs/heads/main/imgs/buttonimgs/noioso.webp" alt="Bevande" class="btn-icon">
-                Sono noiosə e porto da bere
+                Sono noioso e porto da bere
             </a>
         </div>
     </div>
