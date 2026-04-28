@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prenotazione Piatti</title>
+    <style>
+        :root { --bg: #0f172a; --card-bg: #1e293b; --text: #e2e8f0; --accent: #3b82f6; --accent-hover: #2563eb; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 2rem; display: flex; justify-content: center; align-items: flex-start; height: 100vh; margin: 0; box-sizing: border-box; }
+        .container { background: var(--card-bg); padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); width: 100%; max-width: 500px; margin-top: 5vh; }
+        h1 { margin-top: 0; font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
+        .input-group { position: relative; margin-bottom: 2rem; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; transition: border-color 0.2s; box-sizing: border-box; font-size: 1rem; }
+        input:focus { border-color: var(--accent); }
+        .autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid #334155; border-radius: 8px; margin-top: 4px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10; max-height: 200px; overflow-y: auto; display: none; }
+        .autocomplete-item { padding: 10px 12px; cursor: pointer; transition: background 0.2s; }
+        .autocomplete-item:hover { background: #334155; }
+        .variants-list { display: grid; gap: 10px; margin-top: 1rem; }
+        .variant-card { display: flex; justify-content: space-between; align-items: center; background: #334155; padding: 12px; border-radius: 8px; gap: 10px; }
+        .variant-name { word-break: break-word; }
+        .book-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s; flex-shrink: 0; }
+        .book-btn:hover { background: var(--accent-hover); }
+        #message { margin-top: 1rem; text-align: center; font-size: 0.9rem; padding: 10px; border-radius: 6px; display: none; border: 1px solid transparent; }
+        .success { background: rgba(6, 78, 59, 0.3); color: #34d399; border-color: rgba(52, 211, 153, 0.2) !important; }
+        .error { background: rgba(127, 29, 29, 0.3); color: #fca5a5; border-color: rgba(252, 165, 165, 0.2) !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Seleziona il piatto per l'evento</h1>
+        
+        <div class="input-group">
+            <input type="text" id="searchInput" placeholder="Cerca una categoria (min 3 lettere)..." autocomplete="off">
+            <div id="autocompleteDropdown" class="autocomplete-dropdown"></div>
+        </div>
+
+        <div id="variantsContainer" style="display: none;">
+            <h3 style="margin-bottom: 0.5rem; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 1.1rem; font-weight: 500;" id="selectedCategoryTitle">Scegli la tua Variante</h3>
+            <div id="variantsList" class="variants-list"></div>
+        </div>
+    </div>
+
+    <!-- Modale Inserimento Nome -->
+    <div id="nameInputModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div style="background: var(--card-bg); padding: 2.5rem; border-radius: 12px; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 90%;">
+            <h2 style="margin-top: 0; margin-bottom: 0.5rem; color: white;">Chi sta prenotando?</h2>
+            <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 1.5rem;">Stai prenotando: <span id="targetVariantName" style="color: white; font-weight: bold;"></span></p>
+            <input type="text" id="bookingNameInput" placeholder="Il tuo Nome o Soprannome..." style="margin-bottom: 1.5rem; font-size: 1.1rem; padding: 15px;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeNameModal()" style="background: #475569; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; flex: 1;">Annulla</button>
+                <button id="confirmBookingBtn" style="background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: bold;">Conferma</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale di Conferma Successo -->
+    <div id="successModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div style="background: var(--card-bg); padding: 2rem; border-radius: 12px; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+            <h2 style="margin-top: 0; color: white;">Prenotazione Riuscita!</h2>
+            <p id="modalVariantName" style="color: #94a3b8; margin-bottom: 1.5rem; font-size: 1.1rem;"></p>
+            <button onclick="document.getElementById('successModal').style.display='none'" style="background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; width: 100%; font-weight: bold;">Chiudi</button>
+        </div>
+    </div>
+
+    <script>
+        // Quando eseguirai il tunnel dovremmo cambiare questo API base. Oppure possiamo usare percorsi relativi se servita da fastapi.
+        const API_BASE = '/api'; // Useremo file statici serviti da FastAPI per bypassare il problema CORS/URL
+        let searchTimeout;
+
+        const searchInput = document.getElementById('searchInput');
+        const dropdown = document.getElementById('autocompleteDropdown');
+        const variantsContainer = document.getElementById('variantsContainer');
+        const variantsList = document.getElementById('variantsList');
+        const selectedCategoryTitle = document.getElementById('selectedCategoryTitle');
+
+        function showModal(variantName) {
+            document.getElementById('modalVariantName').textContent = `Hai prenotato: ${variantName}`;
+            document.getElementById('successModal').style.display = 'flex';
+        }
+
+        function showMessage(msg) {
+            alert(msg);
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value;
+            variantsContainer.style.display = 'none';
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 3) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`${API_BASE}/categories?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        dropdown.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(cat => {
+                                const div = document.createElement('div');
+                                div.className = 'autocomplete-item';
+                                div.textContent = cat.name;
+                                div.onclick = () => selectCategory(cat);
+                                dropdown.appendChild(div);
+                            });
+                            dropdown.style.display = 'block';
+                        } else {
+                            dropdown.style.display = 'none';
+                        }
+                    })
+                    .catch(e => console.error(e));
+            }, 300);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        function selectCategory(category) {
+            searchInput.value = category.name;
+            dropdown.style.display = 'none';
+            selectedCategoryTitle.textContent = `Varianti per: ${category.name}`;
+            
+            fetch(`${API_BASE}/categories/${category.id}/variants`)
+                .then(res => res.json())
+                .then(variants => {
+                    variantsList.innerHTML = '';
+                    if (variants.length === 0) {
+                        variantsList.innerHTML = '<p style="color:#94a3b8; text-align:center;">Nessuna variante per questa categoria.</p>';
+                    } else {
+                        variants.forEach(variant => {
+                            const div = document.createElement('div');
+                            div.className = 'variant-card';
+                            
+                            if(variant.is_available) {
+                                div.innerHTML = `
+                                    <span class="variant-name">${variant.name}</span>
+                                    <button class="book-btn" onclick="bookVariant(${variant.id}, '${variant.name.replace(/'/g, "\\'")}', this, ${category.id})">Prenota</button>
+                                `;
+                            } else {
+                                div.style.opacity = '0.6';
+                                div.innerHTML = `
+                                    <span class="variant-name" style="text-decoration: line-through; color: #94a3b8;">${variant.name}</span>
+                                    <span style="color: #ef4444; font-size: 0.85rem; font-weight: bold; flex-shrink: 0;">❌ Occupata</span>
+                                `;
+                            }
+                            
+                            variantsList.appendChild(div);
+                        });
+                    }
+                    variantsContainer.style.display = 'block';
+                });
+        }
+
+        let currentBookingData = null;
+
+        function bookVariant(variantId, variantName, button, categoryId) {
+            currentBookingData = { variantId, variantName, button, categoryId };
+            document.getElementById('targetVariantName').textContent = variantName;
+            document.getElementById('nameInputModal').style.display = 'flex';
+            document.getElementById('bookingNameInput').value = '';
+            document.getElementById('bookingNameInput').focus();
+        }
+
+        function closeNameModal() {
+            document.getElementById('nameInputModal').style.display = 'none';
+            currentBookingData = null;
+        }
+
+        document.getElementById('confirmBookingBtn').onclick = () => {
+            const nameInput = document.getElementById('bookingNameInput').value.trim();
+            if (nameInput.length < 2) {
+                alert("Per favore, inserisci un nome valido.");
+                return;
+            }
+            
+            const { variantId, variantName, button, categoryId } = currentBookingData;
+            closeNameModal();
+
+            button.disabled = true;
+            button.innerText = "Attendere...";
+            button.style.background = "#475569";
+
+            fetch(`${API_BASE}/variants/${variantId}/book`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ booked_by: nameInput })
+            })
+            .then(res => res.json().then(data => ({status: res.status, body: data})))
+            .then(({status, body}) => {
+                if (status === 200) {
+                    showModal(variantName);
+                    selectCategory({ id: categoryId, name: searchInput.value });
+                } else if (status === 409) {
+                    showMessage(body.detail || "Ci dispiace, qualcun altro ha testé prenotato questa variante.");
+                    selectCategory({ id: categoryId, name: searchInput.value });
+                } else {
+                    showMessage("Errore del server. Riprova più tardi.");
+                    button.disabled = false;
+                    button.innerText = "Prenota";
+                    button.style.background = "";
+                }
+            })
+            .catch(error => {
+                showMessage("Errore di rete. Controlla la connessione.");
+                button.disabled = false;
+                button.innerText = "Prenota";
+                button.style.background = "";
+            });
+        };
+    </script>
+</body>
+</html>
