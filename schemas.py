@@ -28,10 +28,14 @@ class VariantAdmin(Variant):
 class BookVariantRequest(BaseModel):
     booked_by: str
 
-class BeverageBookingCreate(BaseModel):
+class BeverageBooking(BaseModel):
+    id: int
     booked_by: str
     beverage_name: str
-    photo_url: str = None  # Assicurati che sia scritto esattamente così
+    photo_url: str | None = None  # <--- Il "| None = None" permette valori nulli
+
+    class Config:
+        from_attributes = True
 
 class BeverageBooking(BeverageBookingCreate):
     id: int
