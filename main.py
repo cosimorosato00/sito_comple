@@ -137,7 +137,12 @@ def book_variant(variant_id: int, request: schemas.BookVariantRequest, db: Sessi
 
 @app.post("/api/beverages")
 def book_beverage(request: schemas.BeverageBookingCreate, db: Session = Depends(get_db)):
-    new_drink = models.BeverageBooking(booked_by=request.booked_by, beverage_name=request.beverage_name)
+    # Ora salva anche photo_url
+    new_drink = models.BeverageBooking(
+        booked_by=request.booked_by, 
+        beverage_name=request.beverage_name,
+        photo_url=request.photo_url
+    )
     db.add(new_drink)
     db.commit()
     return {"status": "success"}
