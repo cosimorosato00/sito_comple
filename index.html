@@ -170,17 +170,55 @@ body {
             selfieModal.style.display = 'none';
         }
     
-        document.getElementById('snapBtn').addEventListener('click', () => {
+        // --- LOGICA AGGIORNATA PER LO SCATTO E UPLOAD ---
+        document.getElementById('snapBtn').addEventListener('click', async () => {
             const canvas = document.getElementById('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
-            
-            // Qui in futuro gestirai il salvataggio: const imgData = canvas.toDataURL('image/webp');
-            
-            stopCamera();
-            // Mostriamo il successo finale dopo lo scatto
-            showModal(currentBookingData.variantName);
+    
+            canvas.toBlob(async (blob) => {
+                if (!blob) return;
+    
+                // Nome file unico
+                const fileName = `selfie_${currentBookingData.variantId}_${Date.now()}.webp`;
+    
+                // 1. Caricamento su Supabase Storage (bucket "fotine")
+                const { data, error } = await supabase.storage
+                    .from('fotine') 
+                    .upload(fileName, blob, {
+                        contentType: 'image/webp'
+                    });
+    
+                if (error) {
+                    console.error("Errore upload su Supabase:", error);
+                    alert("Errore nel caricamento della foto: " + error.message);
+                    return;
+                }
+    
+                // 2. Ottenimento URL pubblico
+                const { data: urlData } = supabase.storage
+                    .from('fotine')
+                    .getPublicUrl(fileName);
+    
+                // 3. Invio URL al tuo backend FastAPI su Railway
+                try {
+                    const response = await fetch(`${API_BASE}/variants/${currentBookingData.variantId}/update-photo`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ photo_url: urlData.publicUrl })
+                    });
+    
+                    if (!response.ok) throw new Error("Errore nel salvataggio su DB");
+                } catch (err) {
+                    console.error(err);
+                    alert("Foto caricata, ma errore nel salvataggio sul database.");
+                    return;
+                }
+    
+                stopCamera();
+                showModal(currentBookingData.variantName);
+            }, 'image/webp', 0.8);
         });
     
         // --- LOGICA RICERCA E PRENOTAZIONE ---
