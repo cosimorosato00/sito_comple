@@ -31,6 +31,7 @@ class BookVariantRequest(BaseModel):
 class BeverageBookingCreate(BaseModel):
     booked_by: str
     beverage_name: str
+    photo_url: str = None  # Assicurati che sia scritto esattamente così
 
 class BeverageBooking(BeverageBookingCreate):
     id: int
