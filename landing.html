@@ -9,24 +9,31 @@
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 2rem; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; justify-content: center;
              background: linear-gradient(rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.3)), 
                 url('https://raw.githubusercontent.com/cosimorosato00/sito_comple/refs/heads/main/imgs/landingimgs/diva.webp');
-            background-size: contain;
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
              }
-        .container { 
-            /* Colore scuro con opacità al 70% */
-            background: rgba(30, 41, 59, 0.7); 
-            /* Effetto sfocatura dietro il container */
-            backdrop-filter: blur(10px); 
-            -webkit-backdrop-filter: blur(10px);
+        .container {
+            /* Manteniamo le dimensioni e la forma */
+            max-width: 600px;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            text-align: center;
             
-            padding: 3rem; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); 
-            max-width: 600px; 
-            text-align: center; 
-            border: 1px solid rgba(255, 255, 255, 0.1); /* Un bordo leggero aiuta la definizione */
+            /* Qui aggiungiamo l'immagine di sfondo al container */
+            background: linear-gradient(rgba(30, 41, 59, 0.4), rgba(30, 41, 59, 0.4)), 
+                        url('https://raw.githubusercontent.com/TUO-UTENTE/TUA-REPO/main/tua-immagine.webp');
+            
+            /* Proprietà per farla stare bene dentro il box */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            
+            /* Assicuriamoci che il testo rimanga leggibile */
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         h1 { margin-top: 0; font-size: 2rem; margin-bottom: 0.5rem; }
         .disclaimer { color: #94a3b8; margin-bottom: 2.5rem; font-size: 1.1rem;}
