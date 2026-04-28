@@ -176,9 +176,13 @@ def cancel_booking(variant_id: int, db: Session = Depends(get_db), username: str
     db.commit()
     return {"status": "success"}
 
-@app.get("/api/admin/beverages", response_model=list[schemas.BeverageBooking])
+@app.get("/api/admin/beverages")
 def get_admin_beverages(db: Session = Depends(get_db), username: str = Depends(get_current_username)):
-    return db.query(models.BeverageBooking).all()
+    # Rimuovi temporaneamente 'response_model=list[schemas.BeverageBooking]'
+    # per vedere se il problema è la validazione Pydantic
+    bookings = db.query(models.BeverageBooking).all()
+    # Ritorna i dati grezzi
+    return [{"id": b.id, "booked_by": b.booked_by, "beverage_name": b.beverage_name, "photo_url": b.photo_url} for b in bookings]
 
 @app.post("/api/admin/beverages/{beverage_id}/cancel")
 def cancel_admin_beverage(beverage_id: int, db: Session = Depends(get_db), username: str = Depends(get_current_username)):
