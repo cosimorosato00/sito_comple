@@ -3,78 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Porta Bevande - Evento</title>
+    <title>Alcooooool</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg: #0f172a; --card-bg: #1e293b; --text: #e2e8f0; --accent: #3b82f6; --accent-hover: #2563eb; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 2rem; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; justify-content: center;}
-        .container { background: var(--card-bg); padding: 3rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-width: 500px; width: 100%; text-align: center; }
+        
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: #0f172a;
+            background-image: url('https://raw.githubusercontent.com/cosimorosato00/sito_comple/refs/heads/main/imgs/plis.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text); 
+            padding: 2rem; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            justify-content: center;
+        }
+
+        .container { 
+            background: rgba(30, 41, 59, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3rem; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
+            max-width: 500px; 
+            width: 100%; 
+            text-align: center; 
+        }
+
         h1 { margin-top: 0; font-size: 2rem; }
-        p { color: #94a3b8; font-size: 1.1rem; margin-bottom: 2rem;}
+        p { color: #e2e8f0; font-size: 1.1rem; margin-bottom: 2rem;}
+        
         input { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 1.5rem; outline: none; font-size: 1.1rem; box-sizing: border-box; }
         input:focus { border-color: var(--accent); }
+        
         .submit-btn { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; font-weight: bold; width: 100%; transition: background 0.2s;}
         .submit-btn:hover { background: var(--accent-hover); }
+        
         .emoji { font-size: 5rem; margin-bottom: 10px;}
         .back-link { display: block; margin-top: 2rem; color: #94a3b8; text-decoration: none; }
         .back-link:hover { color: white; text-decoration: underline; }
+
+        /* Camera & Modale */
+        #video { width: 100%; border-radius: 8px; margin-bottom: 1rem; border: 2px solid #334155; display: none; }
+        #canvas { display: none; }
+        
+        .modal-success-bg {
+            background: linear-gradient(rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.3)), 
+                        url('https://raw.githubusercontent.com/cosimorosato00/sito_comple/refs/heads/main/imgs/buttonimgs/thumbsup2.webp');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="emoji">🍺</div>
-        <h1>L'angolo Alcolico!</h1>
-        <p>Grazie per contribuire alle bevande. Scrivi qui sotto il tuo nome e cosa porterai con te.</p>
+        <h1>Angolo Bangla</h1>
+        <p>Si lo so che andrai lì</p>
         
-        <input type="text" id="nameInput" placeholder="Il tuo Nome (es. Cosimo)">
-        <input type="text" id="beverageInput" placeholder="Cosa porti? (es. 2 Casse di Peroni)">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+
+        <input type="text" id="nameInput" placeholder="Il tuo Nome">
+        <input type="text" id="beverageInput" placeholder="Cosa porti?">
         
-        <button class="submit-btn" id="confirmBtn" onclick="submitBeverage()">Aggiungi alla Lista</button>
+        <button class="submit-btn" id="confirmBtn" onclick="startCamera()">Fotinaa??</button>
         <a href="/" class="back-link">← Torna alla Scelta</a>
     </div>
 
-    <!-- Modale Successo -->
-    <div id="successModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
-        <div style="background: var(--card-bg); padding: 2.5rem; border-radius: 12px; max-width: 400px; text-align: center;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
-            <h2 style="margin-top: 0; color: white;">Aggiunto con Successo!</h2>
-            <p style="color: #94a3b8; margin-bottom: 1.5rem;">La tua bevanda è stata registrata sulla Dashboard ed è visibile nelle statistiche.</p>
-            <button onclick="window.location.href='/'" class="submit-btn" style="background: #10b981;">Torna alla Home</button>
+    <div id="successModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div class="modal-success-bg">
+            <h2 style="margin-top: 0; color: white;">E' uno sballo mi piace</h2>
+            <p style="color: #e2e8f0; margin-bottom: 1.5rem; font-weight: bold;">Alcool menzionato</p>
+            <button onclick="window.location.href='/'" class="submit-btn" style="background: var(--accent);">Torna alla Home</button>
         </div>
     </div>
 
     <script>
-        function submitBeverage() {
+        const API_BASE = '/api';
+        const sb = supabase.createClient('https://iyhsivbihzxkprlmtnkt.supabase.co', 'sb_publishable_n6pTi2kGWQXAaa2yJnKIrA_hfRGkVST');
+        const video = document.getElementById('video');
+
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                video.srcObject = stream;
+                video.style.display = 'block';
+                document.getElementById('confirmBtn').innerText = '📸 Scatta!';
+                document.getElementById('confirmBtn').onclick = captureAndSubmit;
+            } catch (err) { alert("Camera non accessibile"); }
+        }
+
+        async function captureAndSubmit() {
             const name = document.getElementById('nameInput').value.trim();
             const beverage = document.getElementById('beverageInput').value.trim();
-
-            if(name.length < 2 || beverage.length < 2){
-                alert("Completa tutti i campi per confermare!");
-                return;
-            }
+            if(!name || !beverage) return alert("Completa i campi");
 
             const btn = document.getElementById('confirmBtn');
             btn.disabled = true;
             btn.innerText = 'Attendere...';
 
-            fetch('/api/beverages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ booked_by: name, beverage_name: beverage })
-            })
-            .then(r => {
-                if(r.ok) {
-                    document.getElementById('successModal').style.display = 'flex';
-                } else {
-                    alert("Errore, riprova più tardi.");
-                    btn.disabled = false;
-                    btn.innerText = 'Aggiungi alla Lista';
-                }
-            })
-            .catch(e => {
-                alert("Errore di rete.");
-                btn.disabled = false;
-                btn.innerText = 'Aggiungi alla Lista';
-            });
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            canvas.toBlob(async (blob) => {
+                const fileName = `drink_${Date.now()}.webp`;
+                
+                const { data: uploadData, error } = await sb.storage.from('fotine').upload(fileName, blob);
+                if (error) { alert("Errore upload"); btn.disabled = false; return; }
+                
+                const { data } = sb.storage.from('fotine').getPublicUrl(fileName);
+
+                fetch(`${API_BASE}/beverages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        booked_by: name, 
+                        beverage_name: beverage,
+                        photo_url: data.publicUrl 
+                    })
+                }).then(r => {
+                    if(r.ok) {
+                        video.srcObject.getTracks().forEach(t => t.stop());
+                        document.getElementById('successModal').style.display = 'flex';
+                    } else {
+                        alert("Errore");
+                        btn.disabled = false;
+                        btn.innerText = 'Scatta Foto e Conferma';
+                    }
+                });
+            }, 'image/webp', 0.8);
         }
     </script>
 </body>
