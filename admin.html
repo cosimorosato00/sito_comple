@@ -88,24 +88,28 @@
             fetch(`${API_BASE}/admin/beverages`)
                 .then(res => res.json())
                 .then(data => {
-                    const tbody = document.getElementById('beveragesTable');
-                    tbody.innerHTML = '';
-                    if(data.length === 0){
-                        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8; padding: 2rem;">Nessuna bevanda registrata.</td></tr>';
-                        return;
-                    }
-                    data.forEach(drink => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td style="font-weight: bold;">${drink.booked_by}</td>
-                            <td>${drink.beverage_name}</td>
-                            <td>
-                                <button class="cancel-btn" onclick="cancelBeverage(${drink.id}, this)">❌ Annulla</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
+                const tbody = document.getElementById('beveragesTable');
+                tbody.innerHTML = '';
+                if(data.length === 0){
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding: 2rem;">Nessuna bevanda registrata.</td></tr>';
+                    return;
+                }
+                data.forEach(drink => {
+                    const tr = document.createElement('tr');
+                    // Aggiungiamo la colonna Foto
+                    tr.innerHTML = `
+                        <td style="font-weight: bold;">${drink.booked_by}</td>
+                        <td>${drink.beverage_name}</td>
+                        <td>
+                            ${drink.photo_url ? `<a href="${drink.photo_url}" target="_blank" style="color: #3b82f6;">📷 Vedi</a>` : 'Nessuna'}
+                        </td>
+                        <td>
+                            <button class="cancel-btn" onclick="cancelBeverage(${drink.id}, this)">❌ Annulla</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
                 });
+            });
         }
 
         function cancelBooking(variantId, btn) {
