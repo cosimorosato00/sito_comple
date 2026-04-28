@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+sqlalchemy
+openpyxl
+pandas
+psycopg2-binary
+python-dotenv
