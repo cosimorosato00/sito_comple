@@ -59,7 +59,23 @@ body {
         background-repeat: no-repeat;
         /* Opzionale: aggiungi un bordo per staccare dallo sfondo scuro del popup */
         border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+        }
+        .modal-bg {
+            /* Impostiamo l'immagine di sfondo */
+            background: linear-gradient(rgba(30, 41, 59, 0.3), rgba(30, 41, 59, 0.3)), 
+                        url('https://raw.githubusercontent.com/cosimorosato00/sito_comple/refs/heads/main/imgs/buttonimgs/cuffia2.webp');
+            background-size: cover;
+            background-position: center;
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            
+            /* Questo assicura che il modale non diventi minuscolo */
+            min-width: 300px;
+            /* Questo assicura che non diventi enorme */
+            max-width: 90vw;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
         .error { background: rgba(127, 29, 29, 0.3); color: #fca5a5; border-color: rgba(252, 165, 165, 0.2) !important; }
     </style>
 </head>
@@ -80,10 +96,10 @@ body {
 
     <!-- Modale Inserimento Nome -->
     <div id="nameInputModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
-        <div style="background: var(--card-bg); padding: 2.5rem; border-radius: 12px; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 90%;">
+        <div class="modal-bg">
             <h2 style="margin-top: 0; margin-bottom: 0.5rem; color: white;">Chi sei?</h2>
-            <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 1.5rem;">Stai portando: <span id="targetVariantName" style="color: white; font-weight: bold;"></span></p>
-            <input type="text" id="bookingNameInput" placeholder="Posso un autografo?" style="margin-bottom: 1.5rem; font-size: 1.1rem; padding: 15px;">
+            <p style="color: #e2e8f0; font-size: 0.95rem; margin-bottom: 1.5rem;">Stai portando: <span id="targetVariantName" style="color: white; font-weight: bold;"></span></p>
+            <input type="text" id="bookingNameInput" placeholder="Posso un autografo?" style="margin-bottom: 1.5rem; font-size: 1.1rem; padding: 15px; width: 100%; box-sizing: border-box;">
             <div style="display: flex; gap: 10px;">
                 <button onclick="closeNameModal()" style="background: #475569; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; flex: 1;">Annulla</button>
                 <button id="confirmBookingBtn" style="background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: bold;">Conferma</button>
