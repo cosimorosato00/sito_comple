@@ -14,7 +14,20 @@
             background-repeat: no-repeat;
             background-attachment: fixed;
              }
-        .container { background: var(--card-bg); padding: 3rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); max-width: 600px; text-align: center; }
+        .container { 
+            /* Colore scuro con opacità al 70% */
+            background: rgba(30, 41, 59, 0.7); 
+            /* Effetto sfocatura dietro il container */
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+            
+            padding: 3rem; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); 
+            max-width: 600px; 
+            text-align: center; 
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Un bordo leggero aiuta la definizione */
+        }
         h1 { margin-top: 0; font-size: 2rem; margin-bottom: 0.5rem; }
         .disclaimer { color: #94a3b8; margin-bottom: 2.5rem; font-size: 1.1rem;}
         
