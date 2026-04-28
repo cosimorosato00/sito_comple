@@ -36,3 +36,5 @@ class BeverageBooking(Base):
     id = Column(Integer, primary_key=True, index=True)
     booked_by = Column(String(255), nullable=False)
     beverage_name = Column(String(255), nullable=False)
+    # Aggiungi questa riga:
+    photo_url = Column(String(255), nullable=True)
