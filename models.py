@@ -19,6 +19,9 @@ class Variant(Base):
     is_available = Column(Boolean, default=True, nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="CASCADE"), nullable=False)
     booked_by = Column(String(255), nullable=True)
+    
+    # Aggiungi questa riga:
+    photo_url = Column(String(255), nullable=True) 
 
     category = relationship("Category", back_populates="variants")
     
