@@ -22,6 +22,20 @@
         .btn-food { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .btn-drinks { background: linear-gradient(135deg, #3b82f6, #2563eb); }
         .emoji { font-size: 3rem; margin-bottom: 5px;}
+        .btn-icon {
+            width: 50px;       /* Dimensione fissa dell'icona */
+            height: 50px;
+            object-fit: contain; /* Mantiene le proporzioni dell'immagine */
+            margin-bottom: 10px;
+        }
+        
+        .choice-btn {
+            /* Manteniamo le tue proprietà, aggiungiamo solo il flex per allineare */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
