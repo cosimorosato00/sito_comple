@@ -78,6 +78,7 @@ body {
         }
         .error { background: rgba(127, 29, 29, 0.3); color: #fca5a5; border-color: rgba(252, 165, 165, 0.2) !important; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
@@ -133,6 +134,7 @@ body {
 
     <script>
         const API_BASE = '/api';
+        const supabase = supabase.createClient('https://iyhsivbihzxkprlmtnkt.supabase.co', 'sb_publishable_n6pTi2kGWQXAaa2yJnKIrA_hfRGkVST');
         let searchTimeout;
         let currentBookingData = null; // Dati della prenotazione corrente
     
